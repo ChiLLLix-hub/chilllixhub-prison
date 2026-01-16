@@ -1,5 +1,6 @@
 -- Outfit Handler for Prison Script
 -- Handles saving and restoring player appearances when jailing/releasing
+-- Requires: illenium-appearance resource with server:getAppearance callback support
 
 local savedAppearance = nil
 
@@ -70,7 +71,12 @@ local function ApplyJailOutfit(playerPed, gender)
     local appearance = ConvertUniformToAppearance(uniformData)
     
     if DoesEntityExist(playerPed) then
-        exports['illenium-appearance']:setPedAppearance(playerPed, appearance)
+        local success, err = pcall(function()
+            exports['illenium-appearance']:setPedAppearance(playerPed, appearance)
+        end)
+        if not success then
+            print('[Prison] Error applying jail outfit: ' .. tostring(err))
+        end
     end
 end
 
@@ -78,8 +84,17 @@ end
 --- @param playerPed number The player ped ID
 local function RestoreSavedAppearance(playerPed)
     if savedAppearance and DoesEntityExist(playerPed) then
-        exports['illenium-appearance']:setPedAppearance(playerPed, savedAppearance)
-        savedAppearance = nil -- Clear after restoring
+        local success, err = pcall(function()
+            exports['illenium-appearance']:setPedAppearance(playerPed, savedAppearance)
+        end)
+        if success then
+            savedAppearance = nil -- Clear after restoring
+        else
+            print('[Prison] Error restoring appearance: ' .. tostring(err))
+            -- Fallback to reloadSkin if setPedAppearance fails
+            TriggerEvent('illenium-appearance:client:reloadSkin')
+            savedAppearance = nil
+        end
     else
         -- Fallback to reloadSkin if no saved appearance
         TriggerEvent('illenium-appearance:client:reloadSkin')
@@ -101,7 +116,14 @@ function SaveAndApplyJailOutfit()
     -- Save current appearance, then apply jail outfit
     SaveCurrentAppearance(function(success)
         local gender = QBCore.Functions.GetPlayerData().charinfo.gender
-        ApplyJailOutfit(playerPed, gender)
+        if success then
+            ApplyJailOutfit(playerPed, gender)
+        else
+            -- Even if save fails, still apply jail outfit
+            -- Player will get DB appearance on release instead
+            print('[Prison] Warning: Failed to save current appearance, will reload from database on release')
+            ApplyJailOutfit(playerPed, gender)
+        end
     end)
 end
 
