@@ -49,22 +49,7 @@ end
 -- Add clothes to prisioner
 
 local function ApplyClothes()
-	local playerPed = PlayerPedId()
-	if DoesEntityExist(playerPed) then
-		Citizen.CreateThread(function()
-			SetPedArmour(playerPed, 0)
-			ClearPedBloodDamage(playerPed)
-			ResetPedVisibleDamage(playerPed)
-			ClearPedLastWeaponDamage(playerPed)
-			ResetPedMovementClipset(playerPed, 0)
-			local gender = QBCore.Functions.GetPlayerData().charinfo.gender
-			if gender == 0 then
-				exports['illenium-appearance']:setPedAppearance(playerPed, Config.Uniforms.male)
-			else
-				exports['illenium-appearance']:setPedAppearance(playerPed, Config.Uniforms.female)
-			end
-		end)
-	end
+	SaveAndApplyJailOutfit()
 end
 
 
@@ -240,7 +225,7 @@ RegisterNetEvent('prison:client:Leave', function()
 		while not IsScreenFadedOut() do
 			Wait(10)
 		end
-		TriggerEvent('illenium-appearance:client:reloadSkin')
+		RestorePlayerAppearance()
 		SetEntityCoords(PlayerPedId(), Config.Locations['outside'].x, Config.Locations['outside'].y, Config.Locations['outside'].z, false, false, false, false)
 		SetEntityHeading(PlayerPedId(), Config.Locations['outside'].w)
 		Wait(500)
@@ -270,7 +255,7 @@ RegisterNetEvent('prison:client:UnjailPerson', function()
 		while not IsScreenFadedOut() do
 			Wait(10)
 		end
-		TriggerEvent('illenium-appearance:client:reloadSkin')
+		RestorePlayerAppearance()
 		SetEntityCoords(PlayerPedId(), Config.Locations['outside'].x, Config.Locations['outside'].y, Config.Locations['outside'].z, false, false, false, false)
 		SetEntityHeading(PlayerPedId(), Config.Locations['outside'].w)
 		Wait(500)
