@@ -5,6 +5,7 @@
 local savedAppearance = nil
 
 --- Saves the current player appearance to memory
+--- Uses illenium-appearance:server:getAppearance callback which returns the player's current appearance data
 --- @param callback function Callback function to execute after saving
 local function SaveCurrentAppearance(callback)
     QBCore.Functions.TriggerCallback('illenium-appearance:server:getAppearance', function(appearance)
@@ -115,7 +116,14 @@ function SaveAndApplyJailOutfit()
     
     -- Save current appearance, then apply jail outfit
     SaveCurrentAppearance(function(success)
-        local gender = QBCore.Functions.GetPlayerData().charinfo.gender
+        local playerData = QBCore.Functions.GetPlayerData()
+        if not playerData or not playerData.charinfo or playerData.charinfo.gender == nil then
+            print('[Prison] Error: Unable to get player gender, defaulting to male outfit')
+            ApplyJailOutfit(playerPed, 0) -- Default to male
+            return
+        end
+        
+        local gender = playerData.charinfo.gender
         if success then
             ApplyJailOutfit(playerPed, gender)
         else
