@@ -138,3 +138,18 @@ end)
 QBCore.Functions.CreateCallback('prison:server:IsAlarmActive', function(_, cb)
     cb(AlarmActivated)
 end)
+
+-- Testing command to jail yourself
+QBCore.Commands.Add('jailme', 'Jail yourself for testing (Admin Only)', {{ name = 'time', help = 'Time in minutes' }}, true, function(source, args)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local time = tonumber(args[1])
+    if not time or time < 1 then
+        TriggerClientEvent('QBCore:Notify', src, 'Invalid time. Usage: /jailme [time in minutes]', 'error')
+        return
+    end
+    
+    TriggerClientEvent('prison:client:Enter', src, time)
+end, 'admin')
