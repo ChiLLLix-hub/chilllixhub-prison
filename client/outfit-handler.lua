@@ -77,6 +77,9 @@ local function ApplyJailOutfit(playerPed, gender)
         end)
         if not success then
             print('[Prison] Error applying jail outfit: ' .. tostring(err))
+        else
+            -- Give the appearance system time to fully apply the outfit
+            Wait(100)
         end
     end
 end

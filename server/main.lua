@@ -9,11 +9,26 @@ RegisterNetEvent('prison:server:SetJailStatus', function(jailTime)
     Player.Functions.SetMetaData('injail', jailTime)
     if jailTime > 0 then
         if Player.PlayerData.job.name ~= 'unemployed' then
+            -- Save the original job before setting to unemployed
+            Player.Functions.SetMetaData('prisonedjob', {
+                name = Player.PlayerData.job.name,
+                label = Player.PlayerData.job.label,
+                payment = Player.PlayerData.job.payment,
+                onduty = Player.PlayerData.job.onduty,
+                isboss = Player.PlayerData.job.isboss,
+                grade = Player.PlayerData.job.grade
+            })
             Player.Functions.SetJob('unemployed')
             TriggerClientEvent('QBCore:Notify', src, Lang:t('info.lost_job'))
         end
     else
         GotItems[source] = nil
+        -- Restore the original job if it was saved
+        if Player.PlayerData.metadata['prisonedjob'] then
+            local savedJob = Player.PlayerData.metadata['prisonedjob']
+            Player.Functions.SetJob(savedJob.name, savedJob.grade)
+            Player.Functions.SetMetaData('prisonedjob', nil)
+        end
     end
 end)
 
