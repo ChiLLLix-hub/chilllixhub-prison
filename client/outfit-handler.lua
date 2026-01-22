@@ -3,6 +3,8 @@
 -- Requires: illenium-appearance resource with server:getAppearance callback support
 
 local savedAppearance = nil
+-- Time in milliseconds to wait after applying outfit to ensure it's fully rendered
+local OUTFIT_APPLY_DELAY = 100
 
 --- Saves the current player appearance to memory
 --- Uses illenium-appearance:server:getAppearance callback which returns the player's current appearance data
@@ -79,7 +81,7 @@ local function ApplyJailOutfit(playerPed, gender)
             print('[Prison] Error applying jail outfit: ' .. tostring(err))
         else
             -- Give the appearance system time to fully apply the outfit
-            Wait(100)
+            Wait(OUTFIT_APPLY_DELAY)
         end
     end
 end
