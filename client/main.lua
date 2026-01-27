@@ -71,9 +71,15 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 	if DoesEntityExist(canteen_ped) or DoesEntityExist(freedom_ped) then return end
 
 	local pedModel = `s_m_m_armoured_01`
+	local prisonerModel = `s_m_y_prisoner_01`
 
 	RequestModel(pedModel)
 	while not HasModelLoaded(pedModel) do
+		Wait(0)
+	end
+
+	RequestModel(prisonerModel)
+	while not HasModelLoaded(prisonerModel) do
 		Wait(0)
 	end
 
@@ -82,6 +88,12 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 	SetEntityInvincible(freedom_ped, true)
 	SetBlockingOfNonTemporaryEvents(freedom_ped, true)
 	TaskStartScenarioInPlace(freedom_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
+
+	canteen_ped = CreatePed(0, prisonerModel, Config.Locations['canteen'].x, Config.Locations['canteen'].y, Config.Locations['canteen'].z, Config.Locations['canteen'].w, false, true)
+	FreezeEntityPosition(canteen_ped, true)
+	SetEntityInvincible(canteen_ped, true)
+	SetBlockingOfNonTemporaryEvents(canteen_ped, true)
+	TaskStartScenarioInPlace(canteen_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
 
 	if not Config.UseTarget then return end
 
@@ -92,6 +104,21 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 				event = 'prison:client:Leave',
 				icon = 'fas fa-clipboard',
 				label = Lang:t('info.target_freedom_option'),
+				canInteract = function()
+					return inJail
+				end
+			}
+		},
+		distance = 2.5,
+	})
+
+	exports['qb-target']:AddTargetEntity(canteen_ped, {
+		options = {
+			{
+				type = 'client',
+				event = 'prison:client:canteen',
+				icon = 'fas fa-hamburger',
+				label = Lang:t('info.target_canteen_option'),
 				canInteract = function()
 					return inJail
 				end
@@ -120,9 +147,15 @@ AddEventHandler('onResourceStart', function(resource)
 	if DoesEntityExist(canteen_ped) or DoesEntityExist(freedom_ped) then return end
 
 	local pedModel = `s_m_m_armoured_01`
+	local prisonerModel = `s_m_y_prisoner_01`
 
 	RequestModel(pedModel)
 	while not HasModelLoaded(pedModel) do
+		Wait(0)
+	end
+
+	RequestModel(prisonerModel)
+	while not HasModelLoaded(prisonerModel) do
 		Wait(0)
 	end
 
@@ -131,6 +164,12 @@ AddEventHandler('onResourceStart', function(resource)
 	SetEntityInvincible(freedom_ped, true)
 	SetBlockingOfNonTemporaryEvents(freedom_ped, true)
 	TaskStartScenarioInPlace(freedom_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
+
+	canteen_ped = CreatePed(0, prisonerModel, Config.Locations['canteen'].x, Config.Locations['canteen'].y, Config.Locations['canteen'].z, Config.Locations['canteen'].w, false, true)
+	FreezeEntityPosition(canteen_ped, true)
+	SetEntityInvincible(canteen_ped, true)
+	SetBlockingOfNonTemporaryEvents(canteen_ped, true)
+	TaskStartScenarioInPlace(canteen_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
 
 	if not Config.UseTarget then return end
 
@@ -141,6 +180,21 @@ AddEventHandler('onResourceStart', function(resource)
 				event = 'prison:client:Leave',
 				icon = 'fas fa-clipboard',
 				label = Lang:t('info.target_freedom_option'),
+				canInteract = function()
+					return inJail
+				end
+			}
+		},
+		distance = 2.5,
+	})
+
+	exports['qb-target']:AddTargetEntity(canteen_ped, {
+		options = {
+			{
+				type = 'client',
+				event = 'prison:client:canteen',
+				icon = 'fas fa-hamburger',
+				label = Lang:t('info.target_canteen_option'),
 				canInteract = function()
 					return inJail
 				end
@@ -306,6 +360,30 @@ CreateThread(function()
 					end
 				end)
 				exports['qb-core']:DrawText('[E] Check Time', 'left')
+			else
+				exports['qb-core']:HideText()
+			end
+		end)
+
+		canteen = BoxZone:Create(vector3(Config.Locations['canteen'].x, Config.Locations['canteen'].y, Config.Locations['canteen'].z), 2.75, 2.75, {
+			name = 'canteen',
+			debugPoly = false,
+		})
+		canteen:onPlayerInOut(function(isPointInside)
+			insidecanteen = isPointInside
+			if isPointInside then
+				CreateThread(function()
+					while insidecanteen do
+						if IsControlJustReleased(0, 38) then
+							exports['qb-core']:KeyPressed()
+							exports['qb-core']:HideText()
+							TriggerEvent('prison:client:canteen')
+							break
+						end
+						Wait(0)
+					end
+				end)
+				exports['qb-core']:DrawText('[E] Get Food', 'left')
 			else
 				exports['qb-core']:HideText()
 			end
