@@ -128,7 +128,7 @@ CreateThread(function()
                 })
                 lastLocation = i
                 jobZone:onPlayerInOut(function(isPointInside)
-                    isInside = isPointInside and inJail and currentJob and not Config.Locations.jobs[k][i].done and not isWorking
+                    isInside = isPointInside and inJail and currentJob and not Config.Locations.jobs[k][i].done and not isWorking and i == currentLocation
                     if isInside then
                         exports['qb-core']:DrawText(Lang:t('info.job_interaction'), 'left')
                     else
