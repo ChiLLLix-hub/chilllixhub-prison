@@ -71,46 +71,92 @@ end
 --- @param gender number The player gender (0 = male, 1 = female)
 local function ApplyJailOutfit(playerPed, gender)
     local uniformData = gender == 0 and Config.Uniforms.male or Config.Uniforms.female
+    
+    if not DoesEntityExist(playerPed) then
+        print('[Prison] Error: Player ped does not exist')
+        return
+    end
+    
+    -- Method 1: Try using illenium-appearance setPedAppearance export
+    local success = false
     local appearance = ConvertUniformToAppearance(uniformData)
     
-    if DoesEntityExist(playerPed) then
-        local success, err = pcall(function()
+    if exports['illenium-appearance'] then
+        success, err = pcall(function()
             exports['illenium-appearance']:setPedAppearance(playerPed, appearance)
         end)
-        if not success then
-            print('[Prison] Error applying jail outfit: ' .. tostring(err))
-        else
-            -- Give the appearance system time to fully apply the outfit
+        if success then
+            print('[Prison] Applied jail outfit using setPedAppearance')
             Wait(OUTFIT_APPLY_DELAY)
+            return
+        else
+            print('[Prison] setPedAppearance failed: ' .. tostring(err))
         end
+    end
+    
+    -- Method 2: Try using native GTA functions directly
+    print('[Prison] Attempting to apply outfit using native functions')
+    if uniformData and uniformData.outfitData then
+        for key, data in pairs(uniformData.outfitData) do
+            if key == 't-shirt' then
+                SetPedComponentVariation(playerPed, 8, data.item, data.texture, 0)
+            elseif key == 'torso2' then
+                SetPedComponentVariation(playerPed, 11, data.item, data.texture, 0)
+            elseif key == 'arms' then
+                SetPedComponentVariation(playerPed, 3, data.item, data.texture, 0)
+            elseif key == 'pants' then
+                SetPedComponentVariation(playerPed, 4, data.item, data.texture, 0)
+            elseif key == 'shoes' then
+                SetPedComponentVariation(playerPed, 6, data.item, data.texture, 0)
+            end
+        end
+        -- Clear accessories
+        ClearPedProp(playerPed, 0) -- Hat
+        ClearPedProp(playerPed, 1) -- Glasses
+        ClearPedProp(playerPed, 2) -- Ear
+        ClearPedProp(playerPed, 6) -- Watch
+        ClearPedProp(playerPed, 7) -- Bracelet
+        
+        print('[Prison] Applied jail outfit using native functions')
+        Wait(OUTFIT_APPLY_DELAY)
+    else
+        print('[Prison] Error: No outfit data found in config')
     end
 end
 
 --- Restores the saved appearance to the player
 --- @param playerPed number The player ped ID
 local function RestoreSavedAppearance(playerPed)
-    if savedAppearance and DoesEntityExist(playerPed) then
+    if not DoesEntityExist(playerPed) then
+        print('[Prison] Error: Player ped does not exist')
+        return
+    end
+    
+    if savedAppearance then
+        -- Try using illenium-appearance setPedAppearance
         local success, err = pcall(function()
             exports['illenium-appearance']:setPedAppearance(playerPed, savedAppearance)
         end)
         if success then
-            savedAppearance = nil -- Clear after restoring
+            print('[Prison] Restored saved appearance using setPedAppearance')
+            savedAppearance = nil
+            return
         else
             print('[Prison] Error restoring appearance: ' .. tostring(err))
-            -- Fallback to reloadSkin if setPedAppearance fails
-            TriggerEvent('illenium-appearance:client:reloadSkin')
-            savedAppearance = nil
         end
-    else
-        -- Fallback to reloadSkin if no saved appearance
-        TriggerEvent('illenium-appearance:client:reloadSkin')
     end
+    
+    -- Fallback: Use illenium-appearance reloadSkin event to load from database
+    print('[Prison] Using reloadSkin fallback to restore appearance from database')
+    TriggerEvent('illenium-appearance:client:reloadSkin')
+    savedAppearance = nil
 end
 
 --- Main function to save appearance and apply jail outfit
 --- Called when player is jailed
 function SaveAndApplyJailOutfit()
     local playerPed = PlayerPedId()
+    print('[Prison] Starting jail outfit application...')
     
     -- Reset player state
     SetPedArmour(playerPed, 0)
@@ -119,24 +165,27 @@ function SaveAndApplyJailOutfit()
     ClearPedLastWeaponDamage(playerPed)
     ResetPedMovementClipset(playerPed, 0)
     
-    -- Save current appearance, then apply jail outfit
+    -- Get player data first
+    local playerData = QBCore.Functions.GetPlayerData()
+    if not playerData or not playerData.charinfo or playerData.charinfo.gender == nil then
+        print('[Prison] Error: Unable to get player gender, defaulting to male outfit')
+        ApplyJailOutfit(playerPed, 0) -- Default to male
+        return
+    end
+    
+    local gender = playerData.charinfo.gender
+    print('[Prison] Player gender: ' .. tostring(gender))
+    
+    -- Try to save current appearance (best effort)
     SaveCurrentAppearance(function(success)
-        local playerData = QBCore.Functions.GetPlayerData()
-        if not playerData or not playerData.charinfo or playerData.charinfo.gender == nil then
-            print('[Prison] Error: Unable to get player gender, defaulting to male outfit')
-            ApplyJailOutfit(playerPed, 0) -- Default to male
-            return
+        if success then
+            print('[Prison] Successfully saved current appearance')
+        else
+            print('[Prison] Warning: Failed to save current appearance, will reload from database on release')
         end
         
-        local gender = playerData.charinfo.gender
-        if success then
-            ApplyJailOutfit(playerPed, gender)
-        else
-            -- Even if save fails, still apply jail outfit
-            -- Player will get DB appearance on release instead
-            print('[Prison] Warning: Failed to save current appearance, will reload from database on release')
-            ApplyJailOutfit(playerPed, gender)
-        end
+        -- Apply jail outfit regardless of save success
+        ApplyJailOutfit(playerPed, gender)
     end)
 end
 
