@@ -28,7 +28,7 @@ Config.Uniforms = {
 
 Config.Locations = {
     freedom = vector4(1740.88, 2476.57, 44.85, 299.49),
-    canteen = vector4(1778.93, 2487.89, 45.85, 119.5),
+    canteen = vector4(1761.39, 2474.42, 45.85, 209.64),
     outside = vector4(1848.13, 2586.05, 44.67, 269.5),
     yard = vector4(1765.67, 2565.91, 44.56, 1.5),
     middle = vector4(1693.33, 2569.51, 44.55, 123.5),
