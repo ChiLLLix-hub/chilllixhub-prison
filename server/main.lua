@@ -9,11 +9,26 @@ RegisterNetEvent('prison:server:SetJailStatus', function(jailTime)
     Player.Functions.SetMetaData('injail', jailTime)
     if jailTime > 0 then
         if Player.PlayerData.job.name ~= 'unemployed' then
+            -- Save the original job before setting to unemployed
+            Player.Functions.SetMetaData('prisonedjob', {
+                name = Player.PlayerData.job.name,
+                label = Player.PlayerData.job.label,
+                payment = Player.PlayerData.job.payment,
+                onduty = Player.PlayerData.job.onduty,
+                isboss = Player.PlayerData.job.isboss,
+                grade = Player.PlayerData.job.grade
+            })
             Player.Functions.SetJob('unemployed')
             TriggerClientEvent('QBCore:Notify', src, Lang:t('info.lost_job'))
         end
     else
         GotItems[source] = nil
+        -- Restore the original job if it was saved
+        if Player.PlayerData.metadata['prisonedjob'] then
+            local savedJob = Player.PlayerData.metadata['prisonedjob']
+            Player.Functions.SetJob(savedJob.name, savedJob.grade)
+            Player.Functions.SetMetaData('prisonedjob', nil)
+        end
     end
 end)
 
@@ -123,3 +138,18 @@ end)
 QBCore.Functions.CreateCallback('prison:server:IsAlarmActive', function(_, cb)
     cb(AlarmActivated)
 end)
+
+-- Testing command to jail yourself
+QBCore.Commands.Add('jailme', 'Jail yourself for testing (Admin Only)', {{ name = 'time', help = 'Time in minutes' }}, true, function(source, args)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    
+    local time = tonumber(args[1])
+    if not time or time < 1 then
+        TriggerClientEvent('QBCore:Notify', src, 'Invalid time. Usage: /jailme [time in minutes]', 'error')
+        return
+    end
+    
+    TriggerClientEvent('prison:client:Enter', src, time)
+end, 'admin')

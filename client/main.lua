@@ -190,11 +190,11 @@ RegisterNetEvent('prison:client:Enter', function(time)
 	end
 	currentJob = tempJobs[math.random(1, #tempJobs)]
 	CreateJobBlip(true)
-	ApplyClothes()
 	TriggerServerEvent('prison:server:SetJailStatus', jailTime)
 	TriggerServerEvent('prison:server:SaveJailItems', jailTime)
 	TriggerServerEvent('InteractSound_SV:PlayOnSource', 'jail', 0.5)
 	CreateCellsBlip()
+	ApplyClothes()
 	Wait(2000)
 	DoScreenFadeIn(1000)
 	QBCore.Functions.Notify(Lang:t('error.do_some_work', { currentjob = Config.Jobs[currentJob] }), 'error')
