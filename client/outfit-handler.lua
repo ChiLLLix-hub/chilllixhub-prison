@@ -66,6 +66,41 @@ local function ConvertUniformToAppearance(uniformData)
     return appearance
 end
 
+--- Applies outfit using native GTA functions
+--- @param playerPed number The player ped ID
+--- @param uniformData table The uniform data from config
+local function ApplyOutfitNative(playerPed, uniformData)
+    if not uniformData or not uniformData.outfitData then
+        print('[Prison] Error: No outfit data found in config')
+        return false
+    end
+    
+    -- Component ID mapping
+    local componentMap = {
+        ['t-shirt'] = 8,
+        ['torso2'] = 11,
+        ['arms'] = 3,
+        ['pants'] = 4,
+        ['shoes'] = 6
+    }
+    
+    for key, data in pairs(uniformData.outfitData) do
+        local componentId = componentMap[key]
+        if componentId then
+            SetPedComponentVariation(playerPed, componentId, data.item, data.texture, 0)
+        end
+    end
+    
+    -- Clear accessories
+    ClearPedProp(playerPed, 0) -- Hat
+    ClearPedProp(playerPed, 1) -- Glasses
+    ClearPedProp(playerPed, 2) -- Ear
+    ClearPedProp(playerPed, 6) -- Watch
+    ClearPedProp(playerPed, 7) -- Bracelet
+    
+    return true
+end
+
 --- Applies the jail outfit to the player
 --- @param playerPed number The player ped ID
 --- @param gender number The player gender (0 = male, 1 = female)
@@ -96,31 +131,9 @@ local function ApplyJailOutfit(playerPed, gender)
     
     -- Method 2: Fallback to native GTA functions
     print('[Prison] Applying outfit using native functions')
-    if uniformData and uniformData.outfitData then
-        for key, data in pairs(uniformData.outfitData) do
-            if key == 't-shirt' then
-                SetPedComponentVariation(playerPed, 8, data.item, data.texture, 0)
-            elseif key == 'torso2' then
-                SetPedComponentVariation(playerPed, 11, data.item, data.texture, 0)
-            elseif key == 'arms' then
-                SetPedComponentVariation(playerPed, 3, data.item, data.texture, 0)
-            elseif key == 'pants' then
-                SetPedComponentVariation(playerPed, 4, data.item, data.texture, 0)
-            elseif key == 'shoes' then
-                SetPedComponentVariation(playerPed, 6, data.item, data.texture, 0)
-            end
-        end
-        -- Clear accessories
-        ClearPedProp(playerPed, 0) -- Hat
-        ClearPedProp(playerPed, 1) -- Glasses
-        ClearPedProp(playerPed, 2) -- Ear
-        ClearPedProp(playerPed, 6) -- Watch
-        ClearPedProp(playerPed, 7) -- Bracelet
-        
+    if ApplyOutfitNative(playerPed, uniformData) then
         print('[Prison] Applied jail outfit using native functions')
         Wait(OUTFIT_APPLY_DELAY)
-    else
-        print('[Prison] Error: No outfit data found in config')
     end
 end
 
@@ -132,8 +145,8 @@ local function RestoreSavedAppearance(playerPed)
         return
     end
     
-    if savedAppearance then
-        -- Try using illenium-appearance setPedAppearance
+    -- Try using illenium-appearance setPedAppearance if available
+    if savedAppearance and GetResourceState('illenium-appearance') == 'started' then
         local success, err = pcall(function()
             exports['illenium-appearance']:setPedAppearance(playerPed, savedAppearance)
         end)
