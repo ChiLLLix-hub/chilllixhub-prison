@@ -71,7 +71,7 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 	if DoesEntityExist(canteen_ped) or DoesEntityExist(freedom_ped) then return end
 
 	local pedModel = `s_m_m_armoured_01`
-	local prisonerModel = `s_m_y_prisoner_01`
+	local prisonerModel = `s_m_y_prismuscl_01`
 
 	RequestModel(pedModel)
 	while not HasModelLoaded(pedModel) do
@@ -93,7 +93,7 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
 	FreezeEntityPosition(canteen_ped, true)
 	SetEntityInvincible(canteen_ped, true)
 	SetBlockingOfNonTemporaryEvents(canteen_ped, true)
-	TaskStartScenarioInPlace(canteen_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
+	TaskStartScenarioInPlace(canteen_ped, 'world_human_muscle_free_weights', 0, true)
 
 	if not Config.UseTarget then return end
 
@@ -147,7 +147,7 @@ AddEventHandler('onResourceStart', function(resource)
 	if DoesEntityExist(canteen_ped) or DoesEntityExist(freedom_ped) then return end
 
 	local pedModel = `s_m_m_armoured_01`
-	local prisonerModel = `s_m_y_prisoner_01`
+	local prisonerModel = `s_m_y_prismuscl_01`
 
 	RequestModel(pedModel)
 	while not HasModelLoaded(pedModel) do
@@ -169,7 +169,7 @@ AddEventHandler('onResourceStart', function(resource)
 	FreezeEntityPosition(canteen_ped, true)
 	SetEntityInvincible(canteen_ped, true)
 	SetBlockingOfNonTemporaryEvents(canteen_ped, true)
-	TaskStartScenarioInPlace(canteen_ped, 'WORLD_HUMAN_CLIPBOARD', 0, true)
+	TaskStartScenarioInPlace(canteen_ped, 'world_human_muscle_free_weights', 0, true)
 
 	if not Config.UseTarget then return end
 
