@@ -6,6 +6,18 @@ local savedAppearance = nil
 -- Time in milliseconds to wait after applying outfit to ensure it's fully rendered
 local OUTFIT_APPLY_DELAY = 100
 
+-- Component ID mapping: t-shirt=8, torso2=11, arms=3, pants=4, shoes=6
+local COMPONENT_MAP = {
+    ['t-shirt'] = 8,
+    ['torso2'] = 11,
+    ['arms'] = 3,
+    ['pants'] = 4,
+    ['shoes'] = 6
+}
+
+-- Prop IDs to clear: 0=hat, 1=glasses, 2=ear, 6=watch, 7=bracelet
+local PROPS_TO_CLEAR = {0, 1, 2, 6, 7}
+
 --- Saves the current player appearance to memory
 --- Uses illenium-appearance:server:getAppearance callback which returns the player's current appearance data
 --- @param callback function Callback function to execute after saving
@@ -29,19 +41,10 @@ local function ConvertUniformToAppearance(uniformData)
         props = {}
     }
     
-    -- Component ID mapping: t-shirt=8, torso2=11, arms=3, pants=4, shoes=6
-    local componentMap = {
-        ['t-shirt'] = 8,
-        ['torso2'] = 11,
-        ['arms'] = 3,
-        ['pants'] = 4,
-        ['shoes'] = 6
-    }
-    
-    -- Convert uniform data to components
+    -- Convert uniform data to components using shared component map
     if uniformData and uniformData.outfitData then
         for key, data in pairs(uniformData.outfitData) do
-            local componentId = componentMap[key]
+            local componentId = COMPONENT_MAP[key]
             if componentId then
                 appearance.components[componentId] = {
                     component_id = componentId,
@@ -52,10 +55,8 @@ local function ConvertUniformToAppearance(uniformData)
         end
     end
     
-    -- Clear all accessories (hats, glasses, watches, etc.)
-    -- Prop IDs: 0=hat, 1=glasses, 2=ear, 6=watch, 7=bracelet
-    local propsToRemove = {0, 1, 2, 6, 7}
-    for _, propId in ipairs(propsToRemove) do
+    -- Clear all accessories using shared prop list
+    for _, propId in ipairs(PROPS_TO_CLEAR) do
         appearance.props[propId] = {
             prop_id = propId,
             drawable = -1,
@@ -75,28 +76,18 @@ local function ApplyOutfitNative(playerPed, uniformData)
         return false
     end
     
-    -- Component ID mapping
-    local componentMap = {
-        ['t-shirt'] = 8,
-        ['torso2'] = 11,
-        ['arms'] = 3,
-        ['pants'] = 4,
-        ['shoes'] = 6
-    }
-    
+    -- Apply outfit components using shared component map
     for key, data in pairs(uniformData.outfitData) do
-        local componentId = componentMap[key]
+        local componentId = COMPONENT_MAP[key]
         if componentId then
             SetPedComponentVariation(playerPed, componentId, data.item, data.texture, 0)
         end
     end
     
-    -- Clear accessories
-    ClearPedProp(playerPed, 0) -- Hat
-    ClearPedProp(playerPed, 1) -- Glasses
-    ClearPedProp(playerPed, 2) -- Ear
-    ClearPedProp(playerPed, 6) -- Watch
-    ClearPedProp(playerPed, 7) -- Bracelet
+    -- Clear accessories using shared prop list
+    for _, propId in ipairs(PROPS_TO_CLEAR) do
+        ClearPedProp(playerPed, propId)
+    end
     
     return true
 end
