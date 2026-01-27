@@ -78,11 +78,9 @@ local function ApplyJailOutfit(playerPed, gender)
     end
     
     -- Method 1: Try using illenium-appearance setPedAppearance export
-    local success = false
-    local appearance = ConvertUniformToAppearance(uniformData)
-    
-    if exports['illenium-appearance'] then
-        success, err = pcall(function()
+    if GetResourceState('illenium-appearance') == 'started' then
+        local appearance = ConvertUniformToAppearance(uniformData)
+        local success, err = pcall(function()
             exports['illenium-appearance']:setPedAppearance(playerPed, appearance)
         end)
         if success then
@@ -92,10 +90,12 @@ local function ApplyJailOutfit(playerPed, gender)
         else
             print('[Prison] setPedAppearance failed: ' .. tostring(err))
         end
+    else
+        print('[Prison] illenium-appearance resource not started, using native fallback')
     end
     
-    -- Method 2: Try using native GTA functions directly
-    print('[Prison] Attempting to apply outfit using native functions')
+    -- Method 2: Fallback to native GTA functions
+    print('[Prison] Applying outfit using native functions')
     if uniformData and uniformData.outfitData then
         for key, data in pairs(uniformData.outfitData) do
             if key == 't-shirt' then
